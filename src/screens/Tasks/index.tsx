@@ -5,27 +5,19 @@ import React, { useEffect, useState } from "react";
 import {
   Alert,
   FlatList,
-  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
-interface Task {
-  id: string;
-  title: string;
-  category: string;
-  completed: boolean;
-  createdAt: string;
-}
+import { ITask } from "./types/task";
 
 const CATEGORIES = ["Work", "Personal", "Shopping", "Health", "Other"];
 
-export function Tasks() {
+export default function Tasks() {
   const { isDarkMode, colors } = useTheme();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Personal");
   const [editingTask, setEditingTask] = useState<string | null>(null);
@@ -46,7 +38,7 @@ export function Tasks() {
     }
   };
 
-  const saveTasks = async (newTasks: Task[]) => {
+  const saveTasks = async (newTasks: ITask[]) => {
     try {
       await AsyncStorage.setItem("tasks", JSON.stringify(newTasks));
       setTasks(newTasks);
@@ -61,7 +53,7 @@ export function Tasks() {
       return;
     }
 
-    const newTask: Task = {
+    const newTask: ITask = {
       id: Date.now().toString(),
       title: newTaskTitle.trim(),
       category: selectedCategory,
@@ -95,7 +87,7 @@ export function Tasks() {
     ]);
   };
 
-  const startEditing = (task: Task) => {
+  const startEditing = (task: ITask) => {
     setEditingTask(task.id);
     setEditTitle(task.title);
   };
@@ -119,7 +111,7 @@ export function Tasks() {
     setEditTitle("");
   };
 
-  const renderTask = ({ item }: { item: Task }) => {
+  const renderTask = ({ item }: { item: ITask }) => {
     const isEditing = editingTask === item.id;
 
     return (
@@ -207,11 +199,6 @@ export function Tasks() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar
-        barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={colors.background}
-      />
-
       <Text style={[styles.title, { color: colors.text }]}>My Tasks</Text>
 
       {/* Add Task Section */}
