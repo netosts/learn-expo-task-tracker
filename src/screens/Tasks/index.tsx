@@ -1,3 +1,4 @@
+import { useTheme } from "@/src/hooks/useTheme";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from "react";
@@ -11,7 +12,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "../../contexts/ThemeContext";
 
 interface Task {
   id: string;
@@ -23,7 +23,7 @@ interface Task {
 
 const CATEGORIES = ["Work", "Personal", "Shopping", "Health", "Other"];
 
-export default function Index() {
+export function Tasks() {
   const { isDarkMode, colors } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");

@@ -1,3 +1,4 @@
+import { useTheme } from "@/src/hooks/useTheme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React from "react";
 import {
@@ -8,7 +9,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useTheme } from "../../contexts/ThemeContext";
 
 export default function Settings() {
   const { isDarkMode, toggleTheme, colors } = useTheme();
