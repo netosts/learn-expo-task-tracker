@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "../../contexts/ThemeContext";
 
 interface Task {
   id: string;
@@ -23,16 +24,15 @@ interface Task {
 const CATEGORIES = ["Work", "Personal", "Shopping", "Health", "Other"];
 
 export default function Index() {
+  const { isDarkMode, colors } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Personal");
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
 
   useEffect(() => {
     loadTasks();
-    loadTheme();
   }, []);
 
   const loadTasks = async () => {
@@ -43,15 +43,6 @@ export default function Index() {
       }
     } catch (error) {
       console.error("Error loading tasks:", error);
-    }
-  };
-
-  const loadTheme = async () => {
-    try {
-      const theme = await AsyncStorage.getItem("theme");
-      setIsDarkMode(theme === "dark");
-    } catch (error) {
-      console.error("Error loading theme:", error);
     }
   };
 
@@ -132,7 +123,7 @@ export default function Index() {
     const isEditing = editingTask === item.id;
 
     return (
-      <View style={[styles.taskItem, isDarkMode && styles.taskItemDark]}>
+      <View style={[styles.taskItem, { backgroundColor: colors.surface }]}>
         <TouchableOpacity
           style={styles.checkbox}
           onPress={() => toggleTaskCompletion(item.id)}
@@ -140,14 +131,21 @@ export default function Index() {
           <MaterialIcons
             name={item.completed ? "check-box" : "check-box-outline-blank"}
             size={24}
-            color={item.completed ? "#4CAF50" : isDarkMode ? "#666" : "#999"}
+            color={item.completed ? colors.success : colors.textSecondary}
           />
         </TouchableOpacity>
 
         <View style={styles.taskContent}>
           {isEditing ? (
             <TextInput
-              style={[styles.editInput, isDarkMode && styles.editInputDark]}
+              style={[
+                styles.editInput,
+                {
+                  backgroundColor: colors.surface,
+                  color: colors.text,
+                  borderColor: colors.border,
+                },
+              ]}
               value={editTitle}
               onChangeText={setEditTitle}
               autoFocus
@@ -158,17 +156,14 @@ export default function Index() {
               <Text
                 style={[
                   styles.taskTitle,
-                  isDarkMode && styles.taskTitleDark,
+                  { color: colors.text },
                   item.completed && styles.taskTitleCompleted,
                 ]}
               >
                 {item.title}
               </Text>
               <Text
-                style={[
-                  styles.taskCategory,
-                  isDarkMode && styles.taskCategoryDark,
-                ]}
+                style={[styles.taskCategory, { color: colors.textSecondary }]}
               >
                 {item.category}
               </Text>
@@ -210,46 +205,65 @@ export default function Index() {
     );
   };
 
-  const styles = getStyles(isDarkMode);
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar
         barStyle={isDarkMode ? "light-content" : "dark-content"}
-        backgroundColor={isDarkMode ? "#1a1a1a" : "#ffffff"}
+        backgroundColor={colors.background}
       />
 
-      <Text style={styles.title}>My Tasks</Text>
+      <Text style={[styles.title, { color: colors.text }]}>My Tasks</Text>
 
       {/* Add Task Section */}
-      <View style={styles.addTaskSection}>
+      <View
+        style={[styles.addTaskSection, { backgroundColor: colors.surface }]}
+      >
         <TextInput
-          style={styles.taskInput}
+          style={[
+            styles.taskInput,
+            {
+              backgroundColor: colors.surface,
+              color: colors.text,
+              borderColor: colors.border,
+            },
+          ]}
           placeholder="Enter a new task..."
-          placeholderTextColor={isDarkMode ? "#666" : "#999"}
+          placeholderTextColor={colors.textSecondary}
           value={newTaskTitle}
           onChangeText={setNewTaskTitle}
           onSubmitEditing={addTask}
         />
 
         <View style={styles.categorySection}>
-          <Text style={styles.categoryLabel}>Category:</Text>
+          <Text style={[styles.categoryLabel, { color: colors.text }]}>
+            Category:
+          </Text>
           <View style={styles.categoryButtons}>
             {CATEGORIES.map((category) => (
               <TouchableOpacity
                 key={category}
                 style={[
                   styles.categoryButton,
-                  selectedCategory === category &&
-                    styles.categoryButtonSelected,
+                  {
+                    backgroundColor:
+                      selectedCategory === category
+                        ? colors.primary
+                        : colors.background,
+                    borderColor:
+                      selectedCategory === category
+                        ? colors.primary
+                        : colors.border,
+                  },
                 ]}
                 onPress={() => setSelectedCategory(category)}
               >
                 <Text
                   style={[
                     styles.categoryButtonText,
-                    selectedCategory === category &&
-                      styles.categoryButtonTextSelected,
+                    {
+                      color:
+                        selectedCategory === category ? "#ffffff" : colors.text,
+                    },
                   ]}
                 >
                   {category}
@@ -274,9 +288,19 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <MaterialIcons name="task-alt" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No tasks yet!</Text>
-            <Text style={styles.emptySubtext}>Add your first task above</Text>
+            <MaterialIcons
+              name="task-alt"
+              size={64}
+              color={colors.textSecondary}
+            />
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+              No tasks yet!
+            </Text>
+            <Text
+              style={[styles.emptySubtext, { color: colors.textSecondary }]}
+            >
+              Add your first task above
+            </Text>
           </View>
         }
       />
@@ -284,168 +308,135 @@ export default function Index() {
   );
 }
 
-const getStyles = (isDarkMode: boolean) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: isDarkMode ? "#1a1a1a" : "#f5f5f5",
-      padding: 20,
-    },
-    title: {
-      fontSize: 28,
-      fontWeight: "bold",
-      marginBottom: 20,
-      color: isDarkMode ? "#ffffff" : "#000000",
-    },
-    addTaskSection: {
-      backgroundColor: isDarkMode ? "#2a2a2a" : "#ffffff",
-      padding: 20,
-      borderRadius: 12,
-      marginBottom: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
-    },
-    taskInput: {
-      borderWidth: 1,
-      borderColor: isDarkMode ? "#444" : "#ddd",
-      borderRadius: 8,
-      padding: 12,
-      fontSize: 16,
-      marginBottom: 15,
-      color: isDarkMode ? "#ffffff" : "#000000",
-      backgroundColor: isDarkMode ? "#333" : "#ffffff",
-    },
-    categorySection: {
-      marginBottom: 15,
-    },
-    categoryLabel: {
-      fontSize: 16,
-      fontWeight: "600",
-      marginBottom: 10,
-      color: isDarkMode ? "#ffffff" : "#000000",
-    },
-    categoryButtons: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 8,
-    },
-    categoryButton: {
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
-      backgroundColor: isDarkMode ? "#444" : "#e0e0e0",
-      borderWidth: 1,
-      borderColor: isDarkMode ? "#555" : "#ccc",
-    },
-    categoryButtonSelected: {
-      backgroundColor: "#2196F3",
-      borderColor: "#2196F3",
-    },
-    categoryButtonText: {
-      fontSize: 14,
-      color: isDarkMode ? "#ffffff" : "#333",
-    },
-    categoryButtonTextSelected: {
-      color: "#ffffff",
-      fontWeight: "600",
-    },
-    addButton: {
-      backgroundColor: "#2196F3",
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 12,
-      borderRadius: 8,
-      gap: 8,
-    },
-    addButtonText: {
-      color: "#ffffff",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    tasksList: {
-      flex: 1,
-    },
-    taskItem: {
-      backgroundColor: "#ffffff",
-      padding: 15,
-      marginBottom: 10,
-      borderRadius: 8,
-      flexDirection: "row",
-      alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-    taskItemDark: {
-      backgroundColor: "#2a2a2a",
-    },
-    checkbox: {
-      marginRight: 12,
-    },
-    taskContent: {
-      flex: 1,
-    },
-    taskTitle: {
-      fontSize: 16,
-      fontWeight: "500",
-      color: "#000000",
-    },
-    taskTitleDark: {
-      color: "#ffffff",
-    },
-    taskTitleCompleted: {
-      textDecorationLine: "line-through",
-      opacity: 0.6,
-    },
-    taskCategory: {
-      fontSize: 12,
-      color: "#666",
-      marginTop: 2,
-    },
-    taskCategoryDark: {
-      color: "#999",
-    },
-    taskActions: {
-      flexDirection: "row",
-      gap: 8,
-    },
-    actionButton: {
-      padding: 4,
-    },
-    editInput: {
-      borderWidth: 1,
-      borderColor: "#ddd",
-      borderRadius: 4,
-      padding: 8,
-      fontSize: 16,
-      backgroundColor: "#ffffff",
-      color: "#000000",
-    },
-    editInputDark: {
-      borderColor: "#555",
-      backgroundColor: "#333",
-      color: "#ffffff",
-    },
-    emptyContainer: {
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 40,
-    },
-    emptyText: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: "#999",
-      marginTop: 10,
-    },
-    emptySubtext: {
-      fontSize: 14,
-      color: "#ccc",
-      marginTop: 5,
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  addTaskSection: {
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  taskInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 15,
+  },
+  categorySection: {
+    marginBottom: 15,
+  },
+  categoryLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 10,
+  },
+  categoryButtons: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  categoryButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  categoryButtonSelected: {
+    backgroundColor: "#2196F3",
+    borderColor: "#2196F3",
+  },
+  categoryButtonText: {
+    fontSize: 14,
+  },
+  categoryButtonTextSelected: {
+    color: "#ffffff",
+    fontWeight: "600",
+  },
+  addButton: {
+    backgroundColor: "#2196F3",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  addButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  tasksList: {
+    flex: 1,
+  },
+  taskItem: {
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  checkbox: {
+    marginRight: 12,
+  },
+  taskContent: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  taskTitleCompleted: {
+    textDecorationLine: "line-through",
+    opacity: 0.6,
+  },
+  taskCategory: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  taskActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  actionButton: {
+    padding: 4,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderRadius: 4,
+    padding: 8,
+    fontSize: 16,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginTop: 10,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    marginTop: 5,
+  },
+});
